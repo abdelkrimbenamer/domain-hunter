@@ -1,0 +1,118 @@
+<!doctype html><html lang="en" data-theme="dark"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Domain Hunter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d1017;--panel:#151a24;--raise:#1c2230;--line:#252c3c;--text:#e8ecf4;--muted:#8b95a8;--accent:#8b9bff;--on-accent:#0d1017;
+--ok:#5fd4b0;--ok-bg:rgba(95,212,176,.13);--warn:#f0b85a;--warn-bg:rgba(240,184,90,.13);--best-bg:rgba(139,155,255,.1);
+--display:"Bricolage Grotesque",system-ui,sans-serif;--body:system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+[data-theme=light]{--bg:#f4f5fa;--panel:#fff;--raise:#eef0f7;--line:#e0e3ee;--text:#161a26;--muted:#626b7f;--accent:#4457e8;--on-accent:#fff;
+--ok:#0b7f60;--ok-bg:#dcf5ec;--warn:#8f5d00;--warn-bg:#fdf0d4;--best-bg:#eceffe}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 var(--body)}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 20px 64px}
+header{display:flex;justify-content:space-between;align-items:center;margin-bottom:36px}
+.brand{font:700 20px var(--display);letter-spacing:-.01em}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:var(--raise);color:var(--text);padding:9px 16px}
+button:hover{border-color:var(--accent)}
+button.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent);font-weight:600}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sentence{font:500 clamp(26px,4.4vw,44px)/1.35 var(--display);letter-spacing:-.02em;margin:0 0 22px}
+.sentence input[type=text],.sentence input[type=number]{font:inherit;letter-spacing:inherit;color:var(--accent);background:var(--panel);
+ border:1px solid var(--line);border-radius:12px;padding:0 .3em;text-align:center;vertical-align:baseline}
+#len{width:2.2em}#tld{width:3.6em}
+.dot{color:var(--muted)}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.opt{display:flex;gap:8px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:999px;background:var(--panel);color:var(--muted)}
+.opt input{accent-color:var(--accent);margin:0}.spacer{flex:1}
+.status{margin:28px 0 24px}
+.bar{height:6px;background:var(--raise);border-radius:3px;overflow:hidden}.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+.stats{display:flex;gap:28px;margin-top:12px;color:var(--muted);flex-wrap:wrap}
+.stats b{color:var(--text);font:600 22px var(--mono);margin-right:6px}
+#st{margin:6px 0 0;color:var(--muted);font-size:13px;min-height:1.4em}
+.grid{display:grid;grid-template-columns:320px 1fr;gap:24px;align-items:start}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+section{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+h2{font:700 17px var(--display);margin:0 0 12px}h2 small{font:400 13px var(--body);color:var(--muted);margin-left:6px}
+.off{display:grid;grid-template-columns:1fr auto auto;gap:4px 14px;font-size:14px}
+.off>*{padding:8px 6px;border-bottom:1px solid var(--line)}
+.off .h{color:var(--muted);font-size:12px}.off .n{display:flex;gap:8px;align-items:center}
+.off .b{background:var(--best-bg)}.off .num{font-family:var(--mono);text-align:right}
+.tag{font-size:12px;padding:2px 9px;border-radius:999px;background:var(--ok-bg);color:var(--ok);white-space:nowrap}
+.tag.warn{background:var(--warn-bg);color:var(--warn)}.tag.best{background:var(--best-bg);color:var(--accent)}
+.row{display:grid;grid-template-columns:minmax(120px,1fr) auto;gap:6px 16px;padding:12px 4px;border-bottom:1px solid var(--line);align-items:center}
+.row:last-child{border:0}.dom{font:600 17px var(--mono);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.buy{justify-self:end;text-align:right;font-size:14px}.buy .p{font:600 15px var(--mono)}
+.cmp{grid-column:1/-1;font-size:12.5px;color:var(--muted);display:flex;gap:4px 12px;flex-wrap:wrap}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+.empty{color:var(--muted);padding:28px 4px;margin:0}
+.list{max-height:70vh;overflow:auto}
+</style></head><body><div class="wrap">
+<header><span class="brand">Domain Hunter</span><button id="theme" aria-label="Toggle light or dark mode">Light mode</button></header>
+
+<p class="sentence">Find every <input type="number" id="len" value="3" min="1" max="10" aria-label="Number of characters"> character name ending in <span class="dot">.</span><input type="text" id="tld" value="com" aria-label="Domain extension"></p>
+<div class="controls">
+ <label class="opt"><input type="checkbox" id="digits">Include digits</label>
+ <label class="opt"><input type="checkbox" id="hyphen">Include hyphens</label>
+ <span class="spacer"></span>
+ <button class="primary" id="go">Search</button><button id="stop">Stop</button><button id="csv">Export CSV</button><button id="diag">Diagnose</button>
+</div>
+
+<div class="status">
+ <div class="bar"><i id="pb"></i></div>
+ <div class="stats"><span><b id="nc">0</b>checked</span><span><b id="na">0</b>available</span><span><b id="nt">0</b>total</span></div>
+ <p id="st">Choose a length and extension, then search.</p>
+</div>
+
+<div class="grid">
+ <section><h2>Platform prices<small id="tl"></small></h2><div class="off" id="off"></div>
+  <p class="empty" id="offe">Prices appear after you search.</p></section>
+ <section><h2>Available domains</h2>
+  <div class="list" id="res"></div><p class="empty" id="rese">No available names yet.</p></section>
+</div></div>
+<script>
+const $=id=>document.getElementById(id);let es,offers=[],found=[],checked=0,total=0,errors=0;
+const money=v=>v==null?'—':'$'+(+v).toFixed(2);const best=()=>offers.find(o=>o.reg!=null);
+const root=document.documentElement;
+function setTheme(t){root.dataset.theme=t;$('theme').textContent=t==='dark'?'Light mode':'Dark mode';try{localStorage.setItem('dh-theme',t)}catch{}}
+let saved=null;try{saved=localStorage.getItem('dh-theme')}catch{}
+setTheme(saved||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark'));
+$('theme').onclick=()=>setTheme(root.dataset.theme==='dark'?'light':'dark');
+$('stop').onclick=()=>{es&&es.close();$('st').textContent='Stopped.'};
+function stats(){$('nc').textContent=checked.toLocaleString();$('na').textContent=found.length.toLocaleString();$('nt').textContent=total.toLocaleString();
+ $('pb').style.width=(total?checked/total*100:0)+'%'}
+$('go').onclick=async()=>{
+ es&&es.close();found=[];checked=0;total=0;errors=0;$('res').innerHTML='';$('rese').hidden=false;stats();
+ const len=$('len').value,tld=$('tld').value.replace(/^\./,'').trim().toLowerCase();
+ $('st').textContent='Starting…';
+ let o={offers:[]};try{o=await(await fetch('/api/offers?tld='+tld)).json()}catch{}
+ if(o.error)return $('st').textContent=o.error;
+ offers=o.offers||[];$('tl').textContent='.'+tld;$('offe').hidden=true;
+ $('off').innerHTML='<div class="h">Platform</div><div class="h num">1st year</div><div class="h num">Renews</div>'+offers.map(x=>{const c=x===best()?' b':'';
+  return `<div class="n${c}"><a target="_blank" rel="noopener" href="${x.link}">${x.name}</a>${c?'<span class="tag best">best</span>':''}</div><div class="num${c}">${money(x.reg)}</div><div class="num${c}">${money(x.ren)}</div>`}).join('');
+ const n=26+($('digits').checked?10:0)+($('hyphen').checked?1:0),tot=n**len;
+ if(tot>600000)return $('st').textContent=`${len} characters with ${n} symbols is ${tot.toLocaleString()} combinations, above the 600,000 limit. Use fewer characters or turn off digits or hyphens.`;
+ if(tot>20000)$('st').textContent=`${tot.toLocaleString()} combinations. Estimated ${Math.round(tot/20*0.4/60)} min or more.`;else $('st').textContent='Searching…';
+ const p=`len=${len}&tld=${tld}&digits=${+$('digits').checked}&hyphen=${+$('hyphen').checked}`;
+ es=new EventSource('/api/search?'+p);
+ es.onmessage=e=>{const m=JSON.parse(e.data);
+  if(m.total){total=m.total;stats();return}
+  if(m.fatal){es.close();stats();$('st').textContent='Stopped: lookups keep failing. Reason: '+m.fatal+'. Click Diagnose to see which part is blocked.';return}
+  if(m.done){es.close();$('st').textContent=`Done. ${found.length} available out of ${checked.toLocaleString()} checked.${errors?` ${errors} could not be verified (${m.why||'registry busy'}) and were not listed. Search again or lower the concurrency.`:''}`;return}
+  checked++;if(m.s==='error')errors++;
+  if(!m.skip&&(m.s==='available'||m.s==='unverified')){found.push(m);addRow(m)}
+  if(checked%5===0||m.done)stats()};
+ es.onerror=()=>{es.close();stats();if(checked<total||!total)$('st').textContent='Connection to the server was lost. Make sure “node server.js” is still running, then search again.'};
+};
+function addRow(m){$('rese').hidden=true;const b=best();
+ const buy=b?`<span class="p">${money(b.reg)}</span> at <a target="_blank" rel="noopener" href="${b.link+m.d}">${b.name}</a><br><span style="color:var(--muted)">renews ${money(b.ren)}</span>`:'<span style="color:var(--muted)">No price data</span>';
+ const cmp=offers.map(o=>`<a target="_blank" rel="noopener" href="${o.link+m.d}">${o.name}</a>`).join('');
+ $('res').insertAdjacentHTML('beforeend',`<div class="row"><div class="dom">${m.d}<span class="tag ${m.s==='unverified'?'warn':''}">${m.s==='unverified'?'unverified, check manually':'confirmed available'}</span></div><div class="buy">${buy}</div><div class="cmp">${cmp}</div></div>`)}
+$('csv').onclick=()=>{const b=best();const rows=['domain,status,best_registrar,price'].concat(found.map(f=>`${f.d},${f.s},${b?b.name:''},${b?b.reg:''}`));
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'}));a.download='domains.csv';a.click()};
+$('diag').onclick=async()=>{$('st').textContent='Running diagnostics…';const tld=$('tld').value.replace(/^\./,'').trim().toLowerCase();
+ try{const r=await(await fetch('/api/diag?tld='+tld)).json();$('st').textContent=r.checks.map(c=>(c.ok?'✓ ':'✗ ')+c.name+(c.detail?' ('+c.detail+')':'')).join('   ')}catch{$('st').textContent='Server unreachable.'}};
+addEventListener('unhandledrejection',e=>{$('st').textContent='Error: '+(e.reason&&e.reason.message||e.reason)});
+stats();
+</script></body></html>
