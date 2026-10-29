@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: domain-hunter
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: APP_PASSWORD
+        sync: false
